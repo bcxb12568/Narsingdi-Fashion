@@ -1,0 +1,163 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'bn692352@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['id', 'titleBn', 'retailPrice', 'stock', 'category']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.titleBn is string && data.titleBn.size() <= 200 &&
+        data.retailPrice is number && data.retailPrice >= 0 &&
+        data.stock is number && data.stock >= 0 &&
+        data.category is string && data.category.size() <= 50 &&
+        (!('titleEn' in data) || (data.titleEn is string && data.titleEn.size() <= 200)) &&
+        (!('categoryNameBn' in data) || (data.categoryNameBn is string && data.categoryNameBn.size() <= 200)) &&
+        (!('wholesalePrice' in data) || (data.wholesalePrice is number && data.wholesalePrice >= 0)) &&
+        (!('minWholesaleQty' in data) || (data.minWholesaleQty is number && data.minWholesaleQty >= 1)) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 2500)) &&
+        (!('fabric' in data) || (data.fabric is string && data.fabric.size() <= 300)) &&
+        (!('image' in data) || (data.image is string && data.image.size() <= 800000)) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 0 && data.rating <= 5)) &&
+        (!('reviewsCount' in data) || (data.reviewsCount is number && data.reviewsCount >= 0)) &&
+        (!('isPinned' in data) || (data.isPinned is bool)) &&
+        (!('pinnedAt' in data) || (data.pinnedAt is number)) &&
+        (!('isNew' in data) || (data.isNew is bool)) &&
+        (!('isBestseller' in data) || (data.isBestseller is bool)) &&
+        (!('sizes' in data) || (data.sizes is list && data.sizes.size() <= 25)) &&
+        (!('colors' in data) || (data.colors is list && data.colors.size() <= 25)) &&
+        (!('features' in data) || (data.features is list && data.features.size() <= 25));
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'customerName', 'customerPhone', 'address', 'district', 'grandTotal', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.customerName is string && data.customerName.size() <= 120 && data.customerName.size() > 0 &&
+        data.customerPhone is string && data.customerPhone.size() <= 30 && data.customerPhone.size() >= 5 &&
+        data.address is string && data.address.size() <= 500 && data.address.size() > 0 &&
+        data.district is string && data.district.size() <= 60 &&
+        data.grandTotal is number && data.grandTotal >= 0 &&
+        data.status is string && data.status.size() <= 30 &&
+        (!('date' in data) || (data.date is string && data.date.size() <= 64)) &&
+        (!('customerEmail' in data) || (data.customerEmail is string && data.customerEmail.size() <= 120)) &&
+        (!('subtotal' in data) || (data.subtotal is number && data.subtotal >= 0)) &&
+        (!('deliveryCharge' in data) || (data.deliveryCharge is number && data.deliveryCharge >= 0)) &&
+        (!('discount' in data) || (data.discount is number && data.discount >= 0)) &&
+        (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 30)) &&
+        (!('paymentStatus' in data) || (data.paymentStatus is string && data.paymentStatus.size() <= 30)) &&
+        (!('trxId' in data) || (data.trxId is string && data.trxId.size() <= 80)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        (!('items' in data) || (data.items is list && data.items.size() <= 100)) &&
+        (!('courier' in data) || (data.courier is map)) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 1 && data.rating <= 5)) &&
+        (!('ratingComment' in data) || (data.ratingComment is string && data.ratingComment.size() <= 1000));
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['id', 'author', 'rating', 'comment', 'isApproved']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.author is string && data.author.size() <= 120 && data.author.size() > 0 &&
+        data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+        data.comment is string && data.comment.size() <= 1000 && data.comment.size() > 0 &&
+        data.isApproved is bool &&
+        (!('date' in data) || (data.date is string && data.date.size() <= 64)) &&
+        (!('isGoogleVerified' in data) || (data.isGoogleVerified is bool)) &&
+        (!('city' in data) || (data.city is string && data.city.size() <= 100)) &&
+        (!('productTitle' in data) || (data.productTitle is string && data.productTitle.size() <= 200)) &&
+        (!('productId' in data) || (data.productId is string && data.productId.size() <= 128)) &&
+        (!('orderId' in data) || (data.orderId is string && data.orderId.size() <= 128)) &&
+        (!('reply' in data) || (data.reply is string && data.reply.size() <= 1000));
+    }
+
+    function isValidStoreSettings(data) {
+      return data.keys().hasAll(['storeName', 'storePhone']) &&
+        data.storeName is string && data.storeName.size() <= 120 &&
+        data.storePhone is string && data.storePhone.size() <= 30 &&
+        (!('storeEmail' in data) || (data.storeEmail is string && data.storeEmail.size() <= 120)) &&
+        (!('storeAddress' in data) || (data.storeAddress is string && data.storeAddress.size() <= 300)) &&
+        (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 200)) &&
+        (!('heroHeading' in data) || (data.heroHeading is string && data.heroHeading.size() <= 200)) &&
+        (!('heroSubtext' in data) || (data.heroSubtext is string && data.heroSubtext.size() <= 500)) &&
+        (!('deliveryInsideNarsingdi' in data) || (data.deliveryInsideNarsingdi is number && data.deliveryInsideNarsingdi >= 0)) &&
+        (!('deliveryOutsideNarsingdi' in data) || (data.deliveryOutsideNarsingdi is number && data.deliveryOutsideNarsingdi >= 0)) &&
+        (!('freeDeliveryOver' in data) || (data.freeDeliveryOver is number && data.freeDeliveryOver >= 0)) &&
+        (!('bkashNumber' in data) || (data.bkashNumber is string && data.bkashNumber.size() <= 30)) &&
+        (!('nagadNumber' in data) || (data.nagadNumber is string && data.nagadNumber.size() <= 30)) &&
+        (!('allowCod' in data) || (data.allowCod is bool)) &&
+        (!('bannerNotice' in data) || (data.bannerNotice is string && data.bannerNotice.size() <= 500)) &&
+        (!('adminPassword' in data) || (data.adminPassword is string && data.adminPassword.size() <= 100)) &&
+        (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 800000)) &&
+        (!('autoRemoveDeliveredOrders' in data) || (data.autoRemoveDeliveredOrders is bool));
+    }
+
+    // Health check endpoint
+    match /test/{testId} {
+      allow get, write: if isValidId(testId);
+    }
+
+    // Products catalog
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isValidId(productId) && isValidProduct(incoming());
+      allow update: if isValidId(productId);
+      allow delete: if isValidId(productId);
+    }
+
+    // Customer orders
+    match /orders/{orderId} {
+      allow get, list: if true;
+      allow create: if isValidId(orderId) && isValidOrder(incoming());
+      allow update: if isValidId(orderId);
+      allow delete: if isValidId(orderId);
+    }
+
+    // Customer and Google reviews
+    match /reviews/{reviewId} {
+      allow get, list: if true;
+      allow create: if isValidId(reviewId) && isValidReview(incoming());
+      allow update: if isValidId(reviewId);
+      allow delete: if isValidId(reviewId);
+    }
+
+    // Store settings
+    match /settings/{settingId} {
+      allow get, list: if true;
+      allow create, update: if isValidId(settingId);
+      allow delete: if false;
+    }
+
+    // Admin permissions roster
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(adminId);
+    }
+  }
+}

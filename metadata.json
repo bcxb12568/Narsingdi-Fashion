@@ -1,0 +1,6 @@
+{
+  "name": "Narsingdi Fashion",
+  "description": "Narsingdi Fashion - Premium traditional handloom & modern clothing e-commerce store and management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

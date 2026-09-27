@@ -1,0 +1,126 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Narsingdi Fashion Jamdani, Three-piece, Panjabi product record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "titleBn": { "type": "string", "maxLength": 200 },
+        "titleEn": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 50 },
+        "categoryNameBn": { "type": "string", "maxLength": 100 },
+        "retailPrice": { "type": "number" },
+        "wholesalePrice": { "type": "number" },
+        "minWholesaleQty": { "type": "number" },
+        "stock": { "type": "number" },
+        "fabric": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "image": { "type": "string", "maxLength": 800000 },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "isNew": { "type": "boolean" },
+        "isBestseller": { "type": "boolean" },
+        "isPinned": { "type": "boolean" },
+        "pinnedAt": { "type": "number" }
+      },
+      "required": ["id", "titleBn", "retailPrice", "stock", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer e-commerce order details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 64 },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "customerPhone": { "type": "string", "maxLength": 30 },
+        "customerEmail": { "type": "string", "maxLength": 120 },
+        "address": { "type": "string", "maxLength": 500 },
+        "district": { "type": "string", "maxLength": 60 },
+        "paymentMethod": { "type": "string", "maxLength": 30 },
+        "paymentStatus": { "type": "string", "maxLength": 30 },
+        "trxId": { "type": "string", "maxLength": 80 },
+        "subtotal": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "discount": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "status": { "type": "string", "maxLength": 30 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "rating": { "type": "number" },
+        "ratingComment": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "customerName", "customerPhone", "address", "district", "grandTotal", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer feedback and rating",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "author": { "type": "string", "maxLength": 120 },
+        "city": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "date": { "type": "string", "maxLength": 64 },
+        "comment": { "type": "string", "maxLength": 1000 },
+        "isGoogleVerified": { "type": "boolean" },
+        "isApproved": { "type": "boolean" },
+        "productTitle": { "type": "string", "maxLength": 200 },
+        "productId": { "type": "string", "maxLength": 128 },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "reply": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "author", "rating", "comment", "isApproved"]
+    },
+    "StoreSettings": {
+      "title": "StoreSettings",
+      "description": "Store configuration and contact numbers",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string", "maxLength": 120 },
+        "tagline": { "type": "string", "maxLength": 200 },
+        "heroHeading": { "type": "string", "maxLength": 200 },
+        "heroSubtext": { "type": "string", "maxLength": 500 },
+        "storePhone": { "type": "string", "maxLength": 30 },
+        "storeEmail": { "type": "string", "maxLength": 120 },
+        "storeAddress": { "type": "string", "maxLength": 300 },
+        "deliveryInsideNarsingdi": { "type": "number" },
+        "deliveryOutsideNarsingdi": { "type": "number" },
+        "freeDeliveryOver": { "type": "number" },
+        "bkashNumber": { "type": "string", "maxLength": 30 },
+        "nagadNumber": { "type": "string", "maxLength": 30 },
+        "allowCod": { "type": "boolean" },
+        "bannerNotice": { "type": "string", "maxLength": 500 },
+        "logoUrl": { "type": "string", "maxLength": 800000 },
+        "autoRemoveDeliveredOrders": { "type": "boolean" }
+      },
+      "required": ["storeName", "storePhone"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store inventory products accessible by customers and managed by admin"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer order records created at checkout and tracked by status"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Customer reviews and verified ratings"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/StoreSettings" },
+      "description": "Global storefront configurations and delivery fees"
+    },
+    "/test/{testId}": {
+      "schema": "string",
+      "description": "Health check and connection verification document"
+    },
+    "/admins/{adminId}": {
+      "schema": "string",
+      "description": "Authorized admin users roster"
+    }
+  }
+}
